@@ -2,8 +2,15 @@
   "use strict";
   if (!Scratch.extensions.unsandboxed)
     throw new Error("Debugger extension must be run unsandboxed");
+  
+  
+  
   if (!vm.runtime.ext_pen)
     vm.runtime.extensionManager.loadExtensionIdSync("pen");
+    let check = setInterval(() => vm.runtime.ext_pen && (clearInterval(check),
+                                                        
+
+
 
   const oldStamp = vm.runtime.ext_pen._stamp;
   let stampsPerFrame = 0;
@@ -1909,3 +1916,5 @@ ${logHTML}
 
   Scratch.extensions.register(new DebuggerExtensionTS());
 })(Scratch);
+
+()), 100);
