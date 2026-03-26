@@ -3,32 +3,12 @@
   if (!Scratch.extensions.unsandboxed)
     throw new Error("Debugger extension must be run unsandboxed");
   
-  
-  
   if (!vm.runtime.ext_pen)
     vm.runtime.extensionManager.loadExtensionIdSync("pen");
-    let check = setInterval(() => vm.runtime.ext_pen && (clearInterval(check),
-                                                        
+      
+  setTimeout(() => {
+}, 3000);
 
-
-
-  const oldStamp = vm.runtime.ext_pen._stamp;
-  let stampsPerFrame = 0;
-  vm.runtime.ext_pen._stamp = function (target) {
-    stampsPerFrame += 1;
-    oldStamp.call(this, target);
-  };
-
-  const oldStepThread = vm.runtime.sequencer.stepThread;
-  let _threadExecutionTimes = {};
-  vm.runtime.sequencer.stepThread = function (e) {
-    const startTime = performance.now();
-    oldStepThread.call(this, e);
-    const endTime = performance.now();
-    const executionTime = endTime - startTime;
-    const variableName = `thread_${e.topBlock}_executionTime`;
-    _threadExecutionTimes[variableName] = executionTime;
-  };
 
   const oldSetTarget = vm.runtime.setEditingTarget;
   vm.runtime.setEditingTarget = function (editingTarget) {
@@ -1916,5 +1896,3 @@ ${logHTML}
 
   Scratch.extensions.register(new DebuggerExtensionTS());
 })(Scratch);
-
-()), 100);
