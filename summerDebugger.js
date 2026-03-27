@@ -3,12 +3,60 @@
   if (!Scratch.extensions.unsandboxed)
     throw new Error("Debugger extension must be run unsandboxed");
   
-  if (!vm.runtime.ext_pen)
-    vm.runtime.extensionManager.loadExtensionIdSync("pen");
-      
-  setTimeout(() => {
-}, 3000);
+  // Global variable to track stamps per frame
+  let stampsPerFrame = 0;
+  
+  // Global object to track thread execution times
+  const _threadExecutionTimes = {};
+  
+  // Function to wait for pen extension to be loaded
+  const waitForPenExtension = () => {
+    return new Promise((resolve) => {
+      const checkPenExtension = () => {
+        if (vm.runtime.ext_pen) {
+          resolve();
+        } else {
+          // Try to load the pen extension
+          try {
+            vm.runtime.extensionManager.loadExtensionIdSync("pen");
+            // Check again after a short delay
+            setTimeout(() => {
+              if (vm.runtime.ext_pen) {
+                resolve();
+              } else {
+                // Keep checking
+                setTimeout(checkPenExtension, 100);
+              }
+            }, 100);
+          } catch (e) {
+            // If loading fails, try again
+            setTimeout(checkPenExtension, 100);
+          }
+        }
+      };
+      checkPenExtension();
+    });
+  };
 
+  // Hook into pen extension to track stamps
+  const hookPenExtension = () => {
+    if (vm.runtime.ext_pen && vm.runtime.ext_pen._penDown) {
+      const originalPenDown = vm.runtime.ext_pen._penDown;
+      vm.runtime.ext_pen._penDown = function(...args) {
+        stampsPerFrame++;
+        return originalPenDown.apply(this, args);
+      };
+    }
+    
+    // Also hook stamp if available
+    if (vm.runtime.ext_pen && vm.runtime.ext_pen.stamp) {
+      const originalStamp = vm.runtime.ext_pen.stamp;
+      vm.runtime.ext_pen.stamp = function(...args) {
+        stampsPerFrame++;
+        return originalStamp.apply(this, args);
+      };
+    }
+  };
 
   const oldSetTarget = vm.runtime.setEditingTarget;
   vm.runtime.setEditingTarget = function (editingTarget) {
@@ -123,6 +171,12 @@
     constructor() {
       this.fpsHistory = new Array(this.historyLength).fill(0);
       this.stampsPerFrameHistory = new Array(this.historyLength).fill(0);
+      
+      // Wait for pen extension before hooking
+      waitForPenExtension().then(() => {
+        hookPenExtension();
+      });
+      
       const oldStep = this.runtime._step;
       let lastFrame = performance.now();
 
