@@ -38,6 +38,9 @@
     });
   };
 
+  setTimeout(() => {
+}, 1000);
+
   // Hook into pen extension to track stamps
   const hookPenExtension = () => {
     if (vm.runtime.ext_pen && vm.runtime.ext_pen._penDown) {
